@@ -1,5 +1,5 @@
 package WebService::Amazon::IAM;
-# ABSTRACT: IAM role
+# ABSTRACT: IAM role implementation
 use strict;
 use warnings;
 
@@ -7,11 +7,11 @@ our $VERSION = '0.001';
 
 =head1 NAME
 
-WebService::Amazon::IAM -
-
-=head1 SYNOPSIS
+WebService::Amazon::IAM - basic Amazon IAM role functionality
 
 =head1 DESCRIPTION
+
+Coming soon.
 
 =cut
 
