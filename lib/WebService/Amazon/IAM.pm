@@ -18,6 +18,8 @@ WebService::Amazon::IAM -
 use JSON::MaybeXS;
 use Time::Moment;
 
+use Log::Any qw($log);
+
 =head1 METHODS
 
 =cut
@@ -46,7 +48,8 @@ resolve to a single string.
 sub active_roles {
 	my ($self) = @_;
 	my $uri = $self->build_uri('/latest/meta-data/iam/security-credentials/');
-	$self->ua->GET($uri)
+	$log->debugf("Requesting list of roles from [%s]", "$uri");
+	$self->ua->get($uri)
 }
 
 =head2 credentials_for_role
@@ -64,23 +67,25 @@ Resolves to the credentials for the given role.
 sub credentials_for_role {
 	my ($self, $role) = @_;
 	my $uri = $self->build_uri('/latest/meta-data/iam/security-credentials/' . $role);
-	$self->ua->GET($uri)->then(sub {
+	$log->debugf("Requesting credentials from [%s]", "$uri");
+	$self->ua->get($uri)->then(sub {
 		my $data = $self->json->decode(shift);
 		return Future->fail("Invalid return code", iam => $data->{Code}, $data) unless $data->{Code} eq 'Success';
 		return Future->fail("Invalid access key type", iam => $data->{Type}, $data) unless $data->{Type} eq 'AWS-HMAC';
-		my $expiry = Time::Moment->from_string($data->{Expiration});
+		my $expiry = Time::Moment->from_string($data->{Expiration})->epoch;
 		Future->wrap({
 			access_key => $data->{AccessKeyId},
 			secret_key => $data->{SecretAccessKey},
 			token      => $data->{Token},
-			expiry     => $data->{Expiration},
-		})
+		}, $expiry)
 	})
 }
 
 sub base_uri { shift->{base_uri} }
 sub build_uri { my $self = shift; URI->new(join '', $self->base_uri, @_) }
 sub json { shift->{json} ||= JSON::MaybeXS->new }
+
+sub ua { shift->{ua} // die "no user agent provided" }
 
 1;
 
