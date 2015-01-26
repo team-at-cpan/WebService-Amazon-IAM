@@ -1,4 +1,6 @@
 Revision history for {{$dist->name}}
 
 {{$NEXT}}
+
+0.001     2015-01-26 16:24:15+00:00 Europe/London
 	Initial CPAN release
